@@ -6,12 +6,14 @@ import com.devsuperior.dscommerce.entities.Product;
 import com.devsuperior.dscommerce.factory.ProductFactory;
 import com.devsuperior.dscommerce.repositories.ProductRepository;
 import com.devsuperior.dscommerce.services.exceptions.ResourceNotFoundException;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -23,6 +25,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(SpringExtension.class)
 class ProductServiceTest {
@@ -57,6 +61,10 @@ class ProductServiceTest {
 
         // Mock para insert()
         Mockito.when(repository.save(any())).thenReturn(product);
+
+        // Mocks para update()
+        Mockito.when(repository.getReferenceById(existingId)).thenReturn(product);
+        Mockito.when(repository.getReferenceById(nonExistingId)).thenThrow(EntityNotFoundException.class);
     }
 
     @Test
@@ -91,5 +99,21 @@ class ProductServiceTest {
 
         assertNotNull(result);
         assertEquals(existingId, result.getId());
+    }
+
+    @Test
+    void updateShouldSaveAndReturnProductDTO() {
+        ProductDTO result = service.update(existingId, productDTO);
+
+        verify(repository).save(any());
+        assertNotNull(result);
+        assertEquals(existingId, result.getId());
+    }
+
+    @Test
+    void updateShouldThrowResourceNotFoundExceptionWhenIdDoesNotExist() {
+        assertThrows(ResourceNotFoundException.class, () -> {
+            service.update(nonExistingId, productDTO);
+        });
     }
 }
