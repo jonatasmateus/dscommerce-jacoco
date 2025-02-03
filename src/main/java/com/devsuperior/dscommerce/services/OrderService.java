@@ -61,9 +61,9 @@ public class OrderService {
     		order.getItems().add(item);
     	}
     	
-    	repository.save(order);
+    	Order result = repository.save(order);
     	orderItemRepository.saveAll(order.getItems());
     	
-    	return new OrderDTO(order);
+    	return new OrderDTO(result);
 	}
 }
